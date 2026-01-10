@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Button Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .feedback-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .feedback-button:hover {
+            background-color: #0056b3;
+        }
+        #feedback-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Feedback Button Example</h1>
+    <p>This demonstrates the FeedbackButton component.</p>
+
+    <div id="feedback-container"></div>
+
+    <script type="module">
+        import { FeedbackButton } from './feedbackButton.js';
+
+        const container = document.getElementById('feedback-container');
+
+        const feedbackButton = new FeedbackButton({
+            text: 'Give Feedback',
+            onClick: () => {
+                alert('Thank you for your feedback! This would typically open a feedback form.');
+            }
+        });
+
+        feedbackButton.render(container);
+    </script>
+</body>
+</html>
