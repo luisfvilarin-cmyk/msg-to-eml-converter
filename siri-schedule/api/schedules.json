@@ -1,0 +1,14 @@
+{
+  "2026-03-01": [
+    {
+      "time": "11:30",
+      "label": "Chair Yoga",
+      "reminderText": "Time to start going to Chair Yoga!"
+    },
+    {
+      "time": "13:30",
+      "label": "Zumba",
+      "reminderText": "Time to start going to Zumba!"
+    }
+  ]
+}
