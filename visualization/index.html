@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudeVil - Knowledge Explorer</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a2e;
+      --border: #2a2a3e;
+      --text: #e0e0e8;
+      --text-dim: #8888a0;
+      --accent: #7c3aed;
+      --accent-glow: #a855f7;
+      --red: #ef4444;
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --orange: #f97316;
+      --yellow: #eab308;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--red));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-glow), var(--red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 24px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .stat-value { color: var(--accent-glow); font-weight: 600; }
+
+    /* Search */
+    .search-section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 240px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-dim); }
+    .date-input {
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+    .date-input:focus { border-color: var(--accent); }
+    .date-label { font-size: 12px; color: var(--text-dim); }
+    .btn {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--accent-glow); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Tags filter */
+    .tags-section {
+      padding: 12px 32px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .tag-pill {
+      padding: 4px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tag-pill:hover { border-color: var(--accent); color: var(--text); }
+    .tag-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .tag-count { opacity: 0.6; margin-left: 4px; }
+
+    /* Main layout */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      min-height: calc(100vh - 200px);
+    }
+    @media (max-width: 900px) {
+      .main { grid-template-columns: 1fr; }
+      .sidebar { border-left: none; border-top: 1px solid var(--border); }
+    }
+
+    /* Timeline chart */
+    .timeline-section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline-title {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .timeline-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 80px;
+      padding: 0 4px;
+    }
+    .timeline-bar {
+      flex: 1;
+      background: var(--accent);
+      border-radius: 2px 2px 0 0;
+      min-width: 4px;
+      max-width: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+    .timeline-bar:hover { background: var(--accent-glow); }
+    .timeline-bar .tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .timeline-bar:hover .tooltip { display: block; }
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+
+    /* Compare mode */
+    .compare-section {
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      display: none;
+    }
+    .compare-section.active { display: block; }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .compare-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .compare-panel h3 {
+      font-size: 13px;
+      color: var(--accent-glow);
+      margin-bottom: 8px;
+    }
+    .compare-stat {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-stat:last-child { border: none; }
+
+    /* Entry cards */
+    .entries-section { padding: 24px 32px; }
+    .entries-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .entries-count { font-size: 12px; color: var(--text-dim); }
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .entry-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+    }
+    .entry-card.expanded .entry-content { display: block; }
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .entry-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .entry-date {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .entry-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .entry-tag {
+      padding: 2px 8px;
+      background: var(--surface2);
+      border-radius: 10px;
+      font-size: 11px;
+      color: var(--accent-glow);
+    }
+    .entry-source {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .source-manual { background: #1e3a5f; color: var(--blue); }
+    .source-screenshot { background: #3a1e3a; color: #c084fc; }
+    .source-download { background: #1e3a2e; color: var(--green); }
+    .source-url { background: #3a2e1e; color: var(--orange); }
+    .source-cron { background: #3a1e1e; color: var(--red); }
+    .entry-content {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      border-left: 1px solid var(--border);
+      padding: 24px;
+    }
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-title {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .assumption-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--red);
+      border-radius: 0 8px 8px 0;
+      padding: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .assumption-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--red);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .assumption-challenge {
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* Add entry modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal h2 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--accent-glow), var(--red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-group textarea { min-height: 120px; resize: vertical; }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-dim);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+    .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+    .empty-state p { font-size: 13px; max-width: 400px; margin: 0 auto; line-height: 1.6; }
+
+    /* Assumption input */
+    .assumption-input-area { margin-bottom: 12px; }
+    .assumption-input-area textarea {
+      width: 100%;
+      padding: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      min-height: 80px;
+      resize: vertical;
+      outline: none;
+    }
+    .assumption-input-area textarea:focus { border-color: var(--accent); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">CV</div>
+      <div class="logo-text">ClaudeVil</div>
+    </div>
+    <div class="stats-bar">
+      <span>Entries: <span class="stat-value" id="stat-total">0</span></span>
+      <span>Last 30d: <span class="stat-value" id="stat-recent">0</span></span>
+      <span>Tags: <span class="stat-value" id="stat-tags">0</span></span>
+    </div>
+  </div>
+
+  <div class="search-section">
+    <div class="search-row">
+      <input type="text" class="search-input" id="search" placeholder="Search your knowledge base..." autocomplete="off">
+      <div class="date-label">From</div>
+      <input type="date" class="date-input" id="date-from">
+      <div class="date-label">To</div>
+      <input type="date" class="date-input" id="date-to">
+      <button class="btn btn-outline" id="compare-btn">Compare Ranges</button>
+      <button class="btn" id="add-btn">+ Add Entry</button>
+    </div>
+  </div>
+
+  <div class="tags-section" id="tags-section"></div>
+
+  <div class="timeline-section">
+    <div class="timeline-title">Knowledge Timeline</div>
+    <div class="timeline-chart" id="timeline-chart"></div>
+    <div class="timeline-labels" id="timeline-labels"></div>
+  </div>
+
+  <div class="compare-section" id="compare-section">
+    <div class="compare-grid" id="compare-grid"></div>
+  </div>
+
+  <div class="main">
+    <div class="entries-section">
+      <div class="entries-header">
+        <span class="entries-count" id="entries-count">0 entries</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" id="sort-date" style="padding: 6px 12px; font-size: 11px;">Newest</button>
+          <button class="btn btn-outline" id="sort-relevance" style="padding: 6px 12px; font-size: 11px;">Relevance</button>
+        </div>
+      </div>
+      <div id="entries-list"></div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Question Your Assumptions</div>
+        <div class="assumption-input-area">
+          <textarea id="assumption-input" placeholder="Paste your recent writing, emails, or notes here to challenge your assumptions..."></textarea>
+          <button class="btn" style="width: 100%; margin-top: 8px;" id="check-assumptions-btn">Analyze</button>
+        </div>
+        <div id="assumptions-list"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">Sources Breakdown</div>
+        <div id="sources-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Entry Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h2>Add Knowledge Entry</h2>
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="entry-title" placeholder="What did you learn?">
+      </div>
+      <div class="form-group">
+        <label>Content</label>
+        <textarea id="entry-content" placeholder="Describe the knowledge, insight, or reference..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tags (comma separated)</label>
+        <input type="text" id="entry-tags" placeholder="e.g. ai, strategy, design">
+      </div>
+      <div class="form-group">
+        <label>Source</label>
+        <select id="entry-source">
+          <option value="manual">Manual</option>
+          <option value="screenshot">Screenshot</option>
+          <option value="download">Download</option>
+          <option value="url">URL</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+        <button class="btn" id="modal-save">Save Entry</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createEntry, listEntries, search, deleteEntry, getTagCloud, getTimeline, getStats, getEntriesByDateRange } from '../src/wiki.js';
+    import { questionAssumptions } from '../src/assumptionChecker.js';
+
+    // State
+    let allEntries = [];
+    let filteredEntries = [];
+    let activeTags = new Set();
+    let sortMode = 'date';
+    let compareMode = false;
+
+    // DOM refs
+    const searchInput = document.getElementById('search');
+    const dateFrom = document.getElementById('date-from');
+    const dateTo = document.getElementById('date-to');
+    const tagsSection = document.getElementById('tags-section');
+    const entriesList = document.getElementById('entries-list');
+    const entriesCount = document.getElementById('entries-count');
+    const timelineChart = document.getElementById('timeline-chart');
+    const timelineLabels = document.getElementById('timeline-labels');
+    const compareSection = document.getElementById('compare-section');
+    const compareGrid = document.getElementById('compare-grid');
+    const assumptionInput = document.getElementById('assumption-input');
+    const assumptionsList = document.getElementById('assumptions-list');
+    const sourcesChart = document.getElementById('sources-chart');
+    const modalOverlay = document.getElementById('modal-overlay');
+
+    function init() {
+      loadEntries();
+      renderAll();
+      bindEvents();
+    }
+
+    function loadEntries() {
+      try {
+        allEntries = listEntries();
+      } catch {
+        // Running in browser without Node — use localStorage fallback
+        allEntries = JSON.parse(localStorage.getItem('claudevil-entries') || '[]');
+      }
+    }
+
+    function saveEntryLocal(entry) {
+      try {
+        createEntry(entry);
+      } catch {
+        // localStorage fallback
+        const entries = JSON.parse(localStorage.getItem('claudevil-entries') || '[]');
+        entry.id = Math.random().toString(36).slice(2, 18);
+        entry.createdAt = new Date().toISOString();
+        entry.updatedAt = new Date().toISOString();
+        entries.push(entry);
+        localStorage.setItem('claudevil-entries', JSON.stringify(entries));
+      }
+      loadEntries();
+    }
+
+    function deleteEntryLocal(id) {
+      try {
+        deleteEntry(id);
+      } catch {
+        const entries = JSON.parse(localStorage.getItem('claudevil-entries') || '[]');
+        localStorage.setItem('claudevil-entries', JSON.stringify(entries.filter(e => e.id !== id)));
+      }
+      loadEntries();
+    }
+
+    function filterEntries() {
+      const query = searchInput.value.toLowerCase();
+      const from = dateFrom.value ? new Date(dateFrom.value) : null;
+      const to = dateTo.value ? new Date(dateTo.value + 'T23:59:59') : null;
+
+      filteredEntries = allEntries.filter(entry => {
+        const matchesQuery = !query ||
+          entry.title.toLowerCase().includes(query) ||
+          entry.content.toLowerCase().includes(query) ||
+          (entry.tags || []).some(t => t.toLowerCase().includes(query));
+
+        const matchesDate =
+          (!from || new Date(entry.createdAt) >= from) &&
+          (!to || new Date(entry.createdAt) <= to);
+
+        const matchesTags = activeTags.size === 0 ||
+          (entry.tags || []).some(t => activeTags.has(t));
+
+        return matchesQuery && matchesDate && matchesTags;
+      });
+
+      if (sortMode === 'date') {
+        filteredEntries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else {
+        // Relevance: score by query match density
+        if (query) {
+          filteredEntries.sort((a, b) => {
+            const scoreA = countMatches(a, query);
+            const scoreB = countMatches(b, query);
+            return scoreB - scoreA;
+          });
+        }
+      }
+    }
+
+    function countMatches(entry, query) {
+      const text = (entry.title + ' ' + entry.content + ' ' + (entry.tags || []).join(' ')).toLowerCase();
+      let count = 0;
+      let pos = 0;
+      while ((pos = text.indexOf(query, pos)) !== -1) { count++; pos++; }
+      return count;
+    }
+
+    function renderAll() {
+      filterEntries();
+      renderStats();
+      renderTags();
+      renderTimeline();
+      renderEntries();
+      renderSources();
+    }
+
+    function renderStats() {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const recent = allEntries.filter(e => new Date(e.createdAt) >= thirtyDaysAgo);
+      const allTags = new Set(allEntries.flatMap(e => e.tags || []));
+
+      document.getElementById('stat-total').textContent = allEntries.length;
+      document.getElementById('stat-recent').textContent = recent.length;
+      document.getElementById('stat-tags').textContent = allTags.size;
+    }
+
+    function renderTags() {
+      const tagCounts = {};
+      allEntries.forEach(e => (e.tags || []).forEach(t => {
+        tagCounts[t] = (tagCounts[t] || 0) + 1;
+      }));
+
+      const sorted = Object.entries(tagCounts).sort(([,a],[,b]) => b - a).slice(0, 20);
+      tagsSection.innerHTML = sorted.map(([tag, count]) =>
+        `<div class="tag-pill ${activeTags.has(tag) ? 'active' : ''}" data-tag="${tag}">
+          #${tag}<span class="tag-count">${count}</span>
+        </div>`
+      ).join('');
+
+      tagsSection.querySelectorAll('.tag-pill').forEach(el => {
+        el.addEventListener('click', () => {
+          const tag = el.dataset.tag;
+          if (activeTags.has(tag)) activeTags.delete(tag);
+          else activeTags.add(tag);
+          renderAll();
+        });
+      });
+    }
+
+    function renderTimeline() {
+      // Build 30-day timeline
+      const days = [];
+      const now = new Date();
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const key = d.toISOString().split('T')[0];
+        days.push({ date: key, count: 0 });
+      }
+      allEntries.forEach(e => {
+        const key = e.createdAt.split('T')[0];
+        const day = days.find(d => d.date === key);
+        if (day) day.count++;
+      });
+
+      const maxCount = Math.max(1, ...days.map(d => d.count));
+      timelineChart.innerHTML = days.map(d => {
+        const h = d.count > 0 ? Math.max(4, (d.count / maxCount) * 100) : 0;
+        const opacity = d.count > 0 ? 0.4 + (d.count / maxCount) * 0.6 : 0.08;
+        return `<div class="timeline-bar" style="height: ${h}%; opacity: ${opacity};" data-date="${d.date}">
+          <div class="tooltip">${d.date}: ${d.count} entries</div>
+        </div>`;
+      }).join('');
+
+      if (days.length > 0) {
+        timelineLabels.innerHTML = `<span>${days[0].date}</span><span>${days[days.length - 1].date}</span>`;
+      }
+    }
+
+    function renderEntries() {
+      entriesCount.textContent = `${filteredEntries.length} entries`;
+
+      if (filteredEntries.length === 0) {
+        entriesList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">~</div>
+            <h3>${allEntries.length === 0 ? 'Your knowledge base is empty' : 'No matching entries'}</h3>
+            <p>${allEntries.length === 0
+              ? 'Start by adding your first entry. Capture insights, learnings, and references from your daily work.'
+              : 'Try adjusting your search query, date range, or tag filters.'}</p>
+          </div>`;
+        return;
+      }
+
+      entriesList.innerHTML = filteredEntries.map(entry => {
+        const date = new Date(entry.createdAt).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        });
+        const tags = (entry.tags || []).map(t => `<span class="entry-tag">#${t}</span>`).join('');
+        const sourceClass = `source-${entry.source || 'manual'}`;
+        const preview = entry.content.length > 200 ? entry.content.slice(0, 200) + '...' : entry.content;
+
+        return `<div class="entry-card" data-id="${entry.id}">
+          <div class="entry-header">
+            <div class="entry-title">${escapeHtml(entry.title)}</div>
+            <div class="entry-date">${date}</div>
+          </div>
+          <div class="entry-meta">
+            ${tags}
+            <span class="entry-source ${sourceClass}">${entry.source || 'manual'}</span>
+          </div>
+          <div class="entry-content">${escapeHtml(entry.content)}</div>
+        </div>`;
+      }).join('');
+
+      entriesList.querySelectorAll('.entry-card').forEach(card => {
+        card.addEventListener('click', () => card.classList.toggle('expanded'));
+      });
+    }
+
+    function renderSources() {
+      const counts = {};
+      allEntries.forEach(e => { counts[e.source || 'manual'] = (counts[e.source || 'manual'] || 0) + 1; });
+      const total = allEntries.length || 1;
+      const colors = { manual: 'var(--blue)', screenshot: '#c084fc', download: 'var(--green)', url: 'var(--orange)', cron: 'var(--red)' };
+
+      sourcesChart.innerHTML = Object.entries(counts)
+        .sort(([,a],[,b]) => b - a)
+        .map(([source, count]) => {
+          const pct = ((count / total) * 100).toFixed(0);
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:60px;font-size:11px;color:${colors[source] || 'var(--text-dim)'}">${source}</div>
+            <div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${colors[source] || 'var(--accent)'};border-radius:3px;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);width:30px;text-align:right;">${count}</div>
+          </div>`;
+        }).join('');
+    }
+
+    function runAssumptionCheck() {
+      const text = assumptionInput.value.trim();
+      if (!text) return;
+
+      let result;
+      try {
+        result = questionAssumptions(text);
+      } catch {
+        // Fallback: run assumption check in browser
+        result = browserAssumptionCheck(text);
+      }
+
+      if (result.assumptions.length === 0) {
+        assumptionsList.innerHTML = '<div style="font-size:12px;color:var(--text-dim);padding:8px;">No strong assumptions detected. Try pasting text with definitive claims.</div>';
+        return;
+      }
+
+      assumptionsList.innerHTML = result.assumptions.map(a =>
+        `<div class="assumption-card">
+          <div class="assumption-type">${a.type}</div>
+          <div class="assumption-challenge">${escapeHtml(a.challengePrompt)}</div>
+        </div>`
+      ).join('');
+    }
+
+    function browserAssumptionCheck(text) {
+      const patterns = [
+        { pattern: /\balways\b/gi, type: 'absolute', phrase: 'always' },
+        { pattern: /\bnever\b/gi, type: 'absolute', phrase: 'never' },
+        { pattern: /\beveryone\b/gi, type: 'absolute', phrase: 'everyone' },
+        { pattern: /\bimpossible\b/gi, type: 'absolute', phrase: 'impossible' },
+        { pattern: /\bobviously\b/gi, type: 'certainty', phrase: 'obviously' },
+        { pattern: /\bclearly\b/gi, type: 'certainty', phrase: 'clearly' },
+        { pattern: /\bshould\b/gi, type: 'normative', phrase: 'should' },
+        { pattern: /\bmust\b/gi, type: 'normative', phrase: 'must' },
+        { pattern: /\bbest\b/gi, type: 'superlative', phrase: 'best' },
+        { pattern: /\bworst\b/gi, type: 'superlative', phrase: 'worst' },
+        { pattern: /\bonly way\b/gi, type: 'limiting', phrase: 'only way' },
+        { pattern: /\bcan't\b/gi, type: 'limiting', phrase: "can't" },
+        { pattern: /\bcannot\b/gi, type: 'limiting', phrase: 'cannot' },
+      ];
+
+      const challenges = {
+        absolute: (p) => `You used "${p}" -- is this truly universal? What exceptions exist?`,
+        certainty: (p) => `You said "${p}" -- what would change your mind? What evidence contradicts this?`,
+        normative: (p) => `You wrote "${p}" -- says who? What if the opposite were true?`,
+        superlative: (p) => `You claimed "${p}" -- by what metric? What are the runners-up?`,
+        limiting: (p) => `You stated "${p}" -- what if there's a way you haven't considered?`,
+      };
+
+      const assumptions = [];
+      for (const { pattern, type, phrase } of patterns) {
+        if (pattern.test(text)) {
+          assumptions.push({
+            type,
+            trigger: phrase,
+            challengePrompt: challenges[type](phrase),
+            relatedWikiEntries: [],
+          });
+        }
+      }
+      return { assumptions, relatedEntries: [] };
+    }
+
+    function toggleCompare() {
+      compareMode = !compareMode;
+      compareSection.classList.toggle('active', compareMode);
+      document.getElementById('compare-btn').textContent = compareMode ? 'Hide Compare' : 'Compare Ranges';
+
+      if (compareMode) renderCompare();
+    }
+
+    function renderCompare() {
+      const from1 = dateFrom.value;
+      const to1 = dateTo.value;
+
+      // Default: compare selected range vs the same-length period before it
+      if (!from1 || !to1) {
+        compareGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);font-size:12px;padding:16px;">Set From and To dates above to compare periods.</div>';
+        return;
+      }
+
+      const d1 = new Date(from1);
+      const d2 = new Date(to1 + 'T23:59:59');
+      const span = d2.getTime() - d1.getTime();
+      const prevFrom = new Date(d1.getTime() - span);
+      const prevTo = new Date(d1.getTime() - 1);
+
+      const currentEntries = allEntries.filter(e => {
+        const d = new Date(e.createdAt);
+        return d >= d1 && d <= d2;
+      });
+      const prevEntries = allEntries.filter(e => {
+        const d = new Date(e.createdAt);
+        return d >= prevFrom && d <= prevTo;
+      });
+
+      function periodStats(entries) {
+        const tags = new Set(entries.flatMap(e => e.tags || []));
+        const sources = {};
+        entries.forEach(e => { sources[e.source || 'manual'] = (sources[e.source || 'manual'] || 0) + 1; });
+        return { count: entries.length, tags: tags.size, sources };
+      }
+
+      const curr = periodStats(currentEntries);
+      const prev = periodStats(prevEntries);
+
+      function delta(a, b) {
+        if (b === 0) return a > 0 ? '+100%' : '0%';
+        const pct = (((a - b) / b) * 100).toFixed(0);
+        return (pct >= 0 ? '+' : '') + pct + '%';
+      }
+
+      compareGrid.innerHTML = `
+        <div class="compare-panel">
+          <h3>Selected: ${from1} to ${to1}</h3>
+          <div class="compare-stat"><span>Entries</span><span>${curr.count}</span></div>
+          <div class="compare-stat"><span>Unique tags</span><span>${curr.tags}</span></div>
+          ${Object.entries(curr.sources).map(([s, c]) =>
+            `<div class="compare-stat"><span>${s}</span><span>${c}</span></div>`
+          ).join('')}
+        </div>
+        <div class="compare-panel">
+          <h3>Previous: ${prevFrom.toISOString().split('T')[0]} to ${prevTo.toISOString().split('T')[0]}</h3>
+          <div class="compare-stat"><span>Entries</span><span>${prev.count} (${delta(curr.count, prev.count)})</span></div>
+          <div class="compare-stat"><span>Unique tags</span><span>${prev.tags} (${delta(curr.tags, prev.tags)})</span></div>
+          ${Object.entries(prev.sources).map(([s, c]) =>
+            `<div class="compare-stat"><span>${s}</span><span>${c}</span></div>`
+          ).join('')}
+        </div>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Event bindings
+    function bindEvents() {
+      searchInput.addEventListener('input', debounce(renderAll, 200));
+      dateFrom.addEventListener('change', () => { renderAll(); if (compareMode) renderCompare(); });
+      dateTo.addEventListener('change', () => { renderAll(); if (compareMode) renderCompare(); });
+
+      document.getElementById('compare-btn').addEventListener('click', toggleCompare);
+      document.getElementById('add-btn').addEventListener('click', () => modalOverlay.classList.add('active'));
+      document.getElementById('modal-cancel').addEventListener('click', () => modalOverlay.classList.remove('active'));
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('active'); });
+
+      document.getElementById('modal-save').addEventListener('click', () => {
+        const title = document.getElementById('entry-title').value.trim();
+        const content = document.getElementById('entry-content').value.trim();
+        const tags = document.getElementById('entry-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+        const source = document.getElementById('entry-source').value;
+
+        if (!title || !content) return;
+
+        saveEntryLocal({ title, content, tags, source, metadata: {} });
+        modalOverlay.classList.remove('active');
+        document.getElementById('entry-title').value = '';
+        document.getElementById('entry-content').value = '';
+        document.getElementById('entry-tags').value = '';
+        renderAll();
+      });
+
+      document.getElementById('sort-date').addEventListener('click', () => { sortMode = 'date'; renderAll(); });
+      document.getElementById('sort-relevance').addEventListener('click', () => { sortMode = 'relevance'; renderAll(); });
+      document.getElementById('check-assumptions-btn').addEventListener('click', runAssumptionCheck);
+    }
+
+    function debounce(fn, ms) {
+      let timer;
+      return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+    }
+
+    init();
+  </script>
+</body>
+</html>

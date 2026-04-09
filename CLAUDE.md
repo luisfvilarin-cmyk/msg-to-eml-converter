@@ -4,29 +4,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MSG to EML Converter - A Node.js tool for converting Microsoft Outlook MSG files to EML format.
+**ClaudeVil** - A personal knowledge management system inspired by Andrej Karpathy's LLM-Wiki concept. Combines a file-based wiki store, ingestion skills, interactive visualization, and an assumption-questioning engine.
 
 ## Development Commands
 
-Currently, this is a minimal project setup. Standard Node.js commands:
-
 ```bash
-npm install          # Install dependencies
-npm test            # Run tests (not yet configured)
+npm install                    # Install dependencies
+npm test                       # Run all tests (41 tests across 4 suites)
+npm start                      # Show CLI help
+node claudevil.js help         # Full CLI usage
+node claudevil.js last30days   # Last 30 days activity report
+node claudevil.js cron         # Run assumption-questioning cron job
 ```
 
-## Project Status
+## Architecture
 
-This project is in early setup phase with minimal files. The codebase will likely need:
-- Core conversion logic for MSG to EML format
-- File I/O handling for reading MSG files and writing EML output
-- Command-line interface or API for conversion operations
-- Dependencies for MSG parsing (e.g., @kenjiuno/msgreader or msg-reader)
-- Email format handling libraries
+### Core Modules (`src/`)
+- **wiki.js** - File-based wiki store with CRUD, search, date filtering, tag cloud, timeline, and stats. Entries stored as JSON in `data/wiki/`.
+- **last30days.js** - Aggregates entries from the last 30 days with weekly breakdown, top tags, and source analysis.
+- **ingest.js** - Ingestion pipeline supporting screenshots, file downloads, raw text, and URLs. Files copied to `data/ingested/`.
+- **assumptionChecker.js** - Scans text for absolute/certainty/normative/superlative/limiting language, cross-references against wiki entries, and generates challenge prompts.
 
-## Architecture Notes
+### CLI (`claudevil.js`)
+Entry point with commands: `add`, `list`, `search`, `get`, `delete`, `tags`, `stats`, `last30days`, `wiki` (with `--screenshot`/`--download`/`--text`/`--url`), `question`, `cron`.
 
-When implementing the converter:
-- MSG files are Microsoft's proprietary format based on OLE/COM structured storage
-- EML files are RFC 822/MIME format email messages
-- Key conversion considerations include preserving email headers, body content, attachments, and metadata
+### Visualization (`visualization/index.html`)
+Interactive single-page app with full-text search, date range filtering, tag filtering, knowledge timeline, period comparison, assumption checker sidebar, and source breakdown. Works standalone in browser with localStorage fallback.
+
+### Cron (`cron/questionAssumptions.js`)
+Schedulable via crontab. Scans wiki entries from the past 7 days and ingested files, runs them through the assumption checker, outputs a report.
+
+### Data (`data/`)
+- `data/wiki/*.json` - Wiki entries (gitignored)
+- `data/ingested/*` - Ingested files (gitignored)
+
+## Key Design Decisions
+- ESM modules throughout (`"type": "module"`)
+- File-based storage (no database dependency)
+- Tests use `node` environment (not jsdom) for file system operations
+- The visualization has a browser-native fallback using localStorage when Node.js imports aren't available

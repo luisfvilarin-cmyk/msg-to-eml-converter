@@ -1,15 +1,23 @@
 {
-  "name": "msg-to-eml-converter",
+  "name": "claudevil",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "claudevil.js",
   "type": "module",
-  "scripts": {
-    "test": "jest"
+  "bin": {
+    "claudevil": "./claudevil.js"
   },
-  "keywords": [],
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "start": "node claudevil.js",
+    "help": "node claudevil.js help",
+    "last30days": "node claudevil.js last30days",
+    "question": "node claudevil.js cron",
+    "viz": "echo 'Open visualization/index.html in your browser'"
+  },
+  "keywords": ["knowledge-management", "wiki", "personal-knowledge", "llm-wiki", "assumptions"],
   "author": "Luis Vilarin",
   "license": "ISC",
-  "description": "MSG to EML Converter",
+  "description": "ClaudeVil - Personal knowledge management system inspired by Karpathy's LLM-Wiki",
   "devDependencies": {
     "@babel/core": "^7.23.0",
     "@babel/preset-env": "^7.23.0",
