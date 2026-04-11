@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spreadsheet Form Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .spreadsheet-form__form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 16px;
+            margin-bottom: 24px;
+        }
+        .spreadsheet-form__field {
+            display: flex;
+            flex-direction: column;
+        }
+        .spreadsheet-form__label {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        .spreadsheet-form__input {
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .spreadsheet-form__submit {
+            grid-column: 1 / -1;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            justify-self: start;
+        }
+        .spreadsheet-form__submit:hover {
+            background-color: #0056b3;
+        }
+        .spreadsheet-form__table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .spreadsheet-form__table th,
+        .spreadsheet-form__table td {
+            border: 1px solid #ddd;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        .spreadsheet-form__table th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spreadsheet Form Example</h1>
+    <p>Fill in the fields below and click <strong>Add Row</strong>. Each submission appends a new row to the spreadsheet.</p>
+
+    <div id="spreadsheet-container"></div>
+
+    <script type="module">
+        import { SpreadsheetForm } from './spreadsheetForm.js';
+
+        const container = document.getElementById('spreadsheet-container');
+
+        const form = new SpreadsheetForm({
+            labels: ['First Name', 'Last Name', 'Email', 'Company', 'Role', 'Notes'],
+            onSubmit: (values) => {
+                console.log('New row added:', values);
+            },
+        });
+
+        form.render(container);
+    </script>
+</body>
+</html>
