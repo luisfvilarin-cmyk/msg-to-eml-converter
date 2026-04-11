@@ -1,7 +1,10 @@
+import * as XLSX from 'xlsx';
+
 /**
  * SpreadsheetForm class
  * Creates a form with 6 text inputs that populates an in-page spreadsheet
- * (HTML table) with each submission.
+ * (HTML table) with each submission. Supports exporting the collected
+ * rows to an .xlsx file.
  */
 export class SpreadsheetForm {
   constructor(options = {}) {
@@ -18,12 +21,15 @@ export class SpreadsheetForm {
       ? options.labels.slice()
       : defaultLabels;
     this.onSubmit = typeof options.onSubmit === 'function' ? options.onSubmit : null;
+    this.sheetName = options.sheetName || 'Sheet1';
+    this.filename = options.filename || 'spreadsheet.xlsx';
 
     this.wrapper = null;
     this.form = null;
     this.inputs = [];
     this.table = null;
     this.tbody = null;
+    this.downloadButton = null;
     this.rows = [];
   }
 
@@ -38,8 +44,23 @@ export class SpreadsheetForm {
 
     this.wrapper.appendChild(this.createForm());
     this.wrapper.appendChild(this.createTable());
+    this.wrapper.appendChild(this.createDownloadButton());
 
     return this.wrapper;
+  }
+
+  /**
+   * Builds the "Download XLSX" button that triggers an .xlsx export.
+   * @returns {HTMLButtonElement}
+   */
+  createDownloadButton() {
+    this.downloadButton = document.createElement('button');
+    this.downloadButton.type = 'button';
+    this.downloadButton.textContent = 'Download XLSX';
+    this.downloadButton.className = 'spreadsheet-form__download';
+    this.downloadButton.setAttribute('data-testid', 'spreadsheet-form-download');
+    this.downloadButton.addEventListener('click', () => this.downloadXLSX());
+    return this.downloadButton;
   }
 
   /**
@@ -162,6 +183,48 @@ export class SpreadsheetForm {
    */
   getRows() {
     return this.rows.map((row) => row.slice());
+  }
+
+  /**
+   * Builds a SheetJS workbook from the header row and collected data rows.
+   * @returns {import('xlsx').WorkBook}
+   */
+  toWorkbook() {
+    const aoa = [this.labels.slice(), ...this.rows.map((row) => row.slice())];
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, this.sheetName);
+    return workbook;
+  }
+
+  /**
+   * Serializes the spreadsheet contents to an .xlsx file as a Uint8Array.
+   * Useful for tests and non-browser environments.
+   * @returns {Uint8Array}
+   */
+  toXLSXBuffer() {
+    const workbook = this.toWorkbook();
+    const arrayBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+    return new Uint8Array(arrayBuffer);
+  }
+
+  /**
+   * Triggers a browser download of the current spreadsheet as an .xlsx file.
+   * @param {string} [filename] - Optional override for the download filename.
+   */
+  downloadXLSX(filename) {
+    const workbook = this.toWorkbook();
+    this.writeWorkbookFile(workbook, filename || this.filename);
+  }
+
+  /**
+   * Thin wrapper around XLSX.writeFile. Exposed as an instance method so it
+   * can be stubbed in tests where the browser download path is not exercised.
+   * @param {import('xlsx').WorkBook} workbook
+   * @param {string} filename
+   */
+  writeWorkbookFile(workbook, filename) {
+    XLSX.writeFile(workbook, filename);
   }
 
   /**

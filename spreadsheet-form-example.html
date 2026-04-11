@@ -60,14 +60,34 @@
         .spreadsheet-form__table th {
             background-color: #f4f4f4;
         }
+        .spreadsheet-form__download {
+            margin-top: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .spreadsheet-form__download:hover {
+            background-color: #1e7e34;
+        }
     </style>
 </head>
 <body>
     <h1>Spreadsheet Form Example</h1>
-    <p>Fill in the fields below and click <strong>Add Row</strong>. Each submission appends a new row to the spreadsheet.</p>
+    <p>Fill in the fields below and click <strong>Add Row</strong>. Each submission appends a new row to the spreadsheet. Click <strong>Download XLSX</strong> to save the collected rows as an Excel file.</p>
 
     <div id="spreadsheet-container"></div>
 
+    <script type="importmap">
+    {
+        "imports": {
+            "xlsx": "./node_modules/xlsx/xlsx.mjs"
+        }
+    }
+    </script>
     <script type="module">
         import { SpreadsheetForm } from './spreadsheetForm.js';
 
@@ -75,6 +95,8 @@
 
         const form = new SpreadsheetForm({
             labels: ['First Name', 'Last Name', 'Email', 'Company', 'Role', 'Notes'],
+            sheetName: 'Contacts',
+            filename: 'contacts.xlsx',
             onSubmit: (values) => {
                 console.log('New row added:', values);
             },

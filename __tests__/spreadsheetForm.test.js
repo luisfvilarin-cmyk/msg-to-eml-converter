@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import * as XLSX from 'xlsx';
 import { SpreadsheetForm } from '../spreadsheetForm.js';
 
 describe('SpreadsheetForm', () => {
@@ -169,5 +170,96 @@ describe('SpreadsheetForm', () => {
   test('destroy handles an un-rendered form gracefully', () => {
     const form = new SpreadsheetForm();
     expect(() => form.destroy()).not.toThrow();
+  });
+
+  test('renders a Download XLSX button', () => {
+    const form = new SpreadsheetForm();
+    form.render(container);
+
+    const button = container.querySelector('[data-testid="spreadsheet-form-download"]');
+    expect(button).not.toBeNull();
+    expect(button.textContent).toBe('Download XLSX');
+    expect(button.type).toBe('button');
+  });
+
+  test('toWorkbook builds a workbook with headers and rows', () => {
+    const form = new SpreadsheetForm({
+      labels: ['A', 'B', 'C', 'D', 'E', 'F'],
+      sheetName: 'Data',
+    });
+    form.render(container);
+
+    form.addRow(['1', '2', '3', '4', '5', '6']);
+    form.addRow(['7', '8', '9', '10', '11', '12']);
+
+    const workbook = form.toWorkbook();
+    expect(workbook.SheetNames).toEqual(['Data']);
+
+    const sheet = workbook.Sheets.Data;
+    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    expect(aoa).toEqual([
+      ['A', 'B', 'C', 'D', 'E', 'F'],
+      ['1', '2', '3', '4', '5', '6'],
+      ['7', '8', '9', '10', '11', '12'],
+    ]);
+  });
+
+  test('toXLSXBuffer produces a parseable xlsx binary', () => {
+    const form = new SpreadsheetForm({
+      labels: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'],
+      sheetName: 'Contacts',
+    });
+    form.render(container);
+
+    form.addRow(['a', 'b', 'c', 'd', 'e', 'f']);
+
+    const buffer = form.toXLSXBuffer();
+    expect(buffer).toBeInstanceOf(Uint8Array);
+    expect(buffer.length).toBeGreaterThan(0);
+
+    const roundTripped = XLSX.read(buffer, { type: 'array' });
+    expect(roundTripped.SheetNames).toContain('Contacts');
+
+    const sheet = roundTripped.Sheets.Contacts;
+    const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    expect(aoa).toEqual([
+      ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'],
+      ['a', 'b', 'c', 'd', 'e', 'f'],
+    ]);
+  });
+
+  test('downloadXLSX calls writeWorkbookFile with the configured filename', () => {
+    const form = new SpreadsheetForm({ filename: 'contacts.xlsx' });
+    form.render(container);
+    form.addRow(['1', '2', '3', '4', '5', '6']);
+
+    const spy = jest.spyOn(form, 'writeWorkbookFile').mockImplementation(() => {});
+    form.downloadXLSX();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const [workbook, filename] = spy.mock.calls[0];
+    expect(filename).toBe('contacts.xlsx');
+    expect(workbook.SheetNames).toEqual(['Sheet1']);
+  });
+
+  test('downloadXLSX honors a filename argument override', () => {
+    const form = new SpreadsheetForm();
+    form.render(container);
+
+    const spy = jest.spyOn(form, 'writeWorkbookFile').mockImplementation(() => {});
+    form.downloadXLSX('override.xlsx');
+
+    expect(spy).toHaveBeenCalledWith(expect.anything(), 'override.xlsx');
+  });
+
+  test('clicking the Download XLSX button triggers a download', () => {
+    const form = new SpreadsheetForm();
+    form.render(container);
+    form.addRow(['1', '2', '3', '4', '5', '6']);
+
+    const spy = jest.spyOn(form, 'writeWorkbookFile').mockImplementation(() => {});
+    container.querySelector('[data-testid="spreadsheet-form-download"]').click();
+
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });
